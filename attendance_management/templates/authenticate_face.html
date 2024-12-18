@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Face Authentication</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #video-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .alert {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h2>Face Authentication</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div id="video-container">
+        <h3>Please look into the camera</h3>
+        <p>We'll verify your identity by matching your face</p>
+        
+        <img src="{{ url_for('video_feed_authenticate', email=email) }}" id="video-feed">
+    </div>
+
+    <p>Ensure good lighting and look directly at the camera</p>
+</body>
+</html>

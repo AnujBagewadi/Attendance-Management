@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capture Face</title>
+</head>
+<body>
+    <h2>Capture Your Face for Registration</h2>
+
+    <video id="video" width="640" height="480" autoplay></video>
+    <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
+    <button id="captureButton">Capture Face</button>
+    <button id="retakeButton" style="display: none;">Retake</button>
+    <div id="feedbackMessage" style="display: none; color: green;">Face captured successfully!</div>
+
+    <form id="uploadForm" method="POST" action="{{ url_for('capture_face') }}">
+        <input type="hidden" name="image_data" id="image_data">
+    </form>
+
+    <script>
+        // Access the webcam
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureButton = document.getElementById('captureButton');
+        const retakeButton = document.getElementById('retakeButton');
+        const feedbackMessage = document.getElementById('feedbackMessage');
+        const imageDataInput = document.getElementById('image_data');
+        const uploadForm = document.getElementById('uploadForm');
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+            })
+            .catch((err) => {
+                alert("Error accessing camera: " + err);
+            });
+
+        captureButton.addEventListener('click', () => {
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL('image/jpeg');  // Capture image as base64
+            imageDataInput.value = imageData;  // Store image data in hidden input field
+
+            // Show feedback message
+            feedbackMessage.style.display = 'block';
+            captureButton.style.display = 'none';
+            retakeButton.style.display = 'inline';
+
+            // Submit the form via AJAX
+            const formData = new FormData(uploadForm);
+            fetch(uploadForm.action, {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (response.redirected) {
+                        // Redirect to the registration success page
+                        window.location.href = response.url;
+                    } else {
+                        throw new Error("An error occurred during face capture.");
+                    }
+                })
+                .catch(error => {
+                    alert("Failed to complete registration. Please try again.");
+                    feedbackMessage.style.display = 'none';
+                    captureButton.style.display = 'inline';
+                    retakeButton.style.display = 'none';
+                });
+        });
+
+        retakeButton.addEventListener('click', () => {
+            // Reset the form to allow retaking the photo
+            feedbackMessage.style.display = 'none';
+            captureButton.style.display = 'inline';
+            retakeButton.style.display = 'none';
+        });
+    </script>
+
+</body>
+</html>

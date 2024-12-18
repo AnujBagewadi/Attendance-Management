@@ -1,0 +1,79 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h2>Scan Faculty Face for Attendance</h2>
+    <form id="facultyScanForm" method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="course">Select Course</label>
+            <select name="course" id="course" class="form-control" required>
+                {% for course in courses %}
+                <option value="{{ course }}">{{ course }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Face Capture Section -->
+        <div class="form-group">
+            <label>Face Capture</label>
+            <div class="camera-container">
+                <video id="video" width="640" height="480" autoplay></video>
+                <canvas id="canvas" style="display:none;"></canvas>
+            </div>
+            <button type="button" id="startCamera" class="btn btn-primary">Start Camera</button>
+            <button type="button" id="captureImage" class="btn btn-success" style="display:none;">Capture Image</button>
+            <input type="hidden" id="image_data" name="image_data">
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Verify Attendance</button>
+    </form>
+</div>
+
+<script>
+// Same script as in register_faculty.html
+document.addEventListener('DOMContentLoaded', function() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const startCameraBtn = document.getElementById('startCamera');
+    const captureImageBtn = document.getElementById('captureImage');
+    const imageDataInput = document.getElementById('image_data');
+    const submitBtn = document.getElementById('submitBtn');
+
+    startCameraBtn.addEventListener('click', function() {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function(stream) {
+                video.srcObject = stream;
+                video.play();
+                startCameraBtn.style.display = 'none';
+                captureImageBtn.style.display = 'block';
+            })
+            .catch(function(err) {
+                console.log("Error accessing camera: ", err);
+                alert("Could not access camera. Please check permissions.");
+            });
+    });
+
+    captureImageBtn.addEventListener('click', function() {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Convert canvas to base64 image
+        const imageData = canvas.toDataURL('image/jpeg');
+        imageDataInput.value = imageData;
+
+        // Stop video stream
+        const stream = video.srcObject;
+        const tracks = stream.getTracks();
+        tracks.forEach(track => track.stop());
+
+        // Hide video, show captured image
+        video.style.display = 'none';
+        canvas.style.display = 'block';
+
+        // Enable submit button
+        submitBtn.disabled = false;
+        captureImageBtn.disabled = true;
+    });
+});
+</script>
+{% endblock %}
